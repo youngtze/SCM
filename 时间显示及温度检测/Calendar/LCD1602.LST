@@ -1,0 +1,103 @@
+C51 COMPILER V9.00   LCD1602                                                               01/10/2013 17:30:28 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LCD1602
+OBJECT MODULE PLACED IN LCD1602.OBJ
+COMPILER INVOKED BY: D:\Keil U4\C51\BIN\C51.EXE LCD1602.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg51.h>
+   2          #include<intrins.h>
+   3          #define uint unsigned int
+   4          #define uchar unsigned char
+   5          /************************
+   6          *  LCD1602功能引脚位定义
+   7          *************************/
+   8          sbit lcden=P2^7;  //lcd1602选信号
+   9          sbit lcdrs=P2^6;  //lcd1602数据/命令信号
+  10          sbit lcdrw=P2^5;  //lcd1602读写信号
+  11          /******************************
+  12          *  函数功能：软件延时（约1ms）
+  13          * 入口参数：uint xms
+  14          *  出口参数：
+  15          *******************************/
+  16          void delayms(uint xms)
+  17          {
+  18   1              uint i,j;
+  19   1              for(i=xms;i>0;i--)
+  20   1                      for(j=110;j>0;j--);
+  21   1      }
+  22          /*********************************
+  23          *  函数功能：向LCD写一个字节命令
+  24          *  入口参数：uchar command
+  25          *  出口参数：
+  26          **********************************/
+  27          void lcd_writecommand(uchar command)
+  28          {
+  29   1              lcdrs=0;
+  30   1              lcdrw=0;
+  31   1              lcden=0;
+  32   1              P0=command;
+  33   1              delayms(5);
+  34   1              lcden=1;
+  35   1              delayms(5);
+  36   1              lcden=0;
+  37   1      }
+  38          /********************************
+  39          *  函数功能：向LCD写一个字节数据 
+  40          *  入口参数：uchar dat
+  41          *  出口参数：
+  42          *********************************/
+  43          void lcd_writedata(uchar dat)
+  44          {
+  45   1              lcdrs=1;
+  46   1              lcdrw=0;
+  47   1              lcden=0;
+  48   1              P0=dat;
+  49   1              delayms(5);
+  50   1              lcden=1;
+  51   1              delayms(5);
+  52   1              lcden=0;
+  53   1      }
+  54          /***************************
+  55          *  函数功能：对LCD进行初始化 
+C51 COMPILER V9.00   LCD1602                                                               01/10/2013 17:30:28 PAGE 2   
+
+  56          *  入口参数：
+  57          *  出口参数：
+  58          ****************************/
+  59          void lcd_initial()
+  60          {
+  61   1      //      delayms(15);
+  62   1      //      lcd_writecommand(0x38);
+  63   1      //      delayms(5);
+  64   1      //      lcd_writecommand(0x38);
+  65   1      //      delayms(5);
+  66   1              lcd_writecommand(0x38);   //显示模式设置 16x2显示 5x7点阵 8位数据接口
+  67   1              delayms(10);
+  68   1              lcd_writecommand(0x08);   //关显示
+  69   1              delayms(10);
+  70   1              lcd_writecommand(0x01);   //显示清屏 （数据指钟清零，所有显示清零）
+  71   1              delayms(10);
+  72   1              lcd_writecommand(0x06);   //写一个字符后地址指针加一，且光标加一
+  73   1              delayms(10);
+  74   1              lcd_writecommand(0x0c);   //开显示，不显示光标，不闪烁
+  75   1      }
+  76          
+  77                  
+  78                          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    118    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

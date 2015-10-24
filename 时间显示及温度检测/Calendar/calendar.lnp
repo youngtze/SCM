@@ -1,0 +1,8 @@
+"STARTUP.obj",
+"LCD1602.obj",
+"DS18B20.obj",
+"DS1302.obj",
+"MAIN.obj",
+"CALENDAR_SET.obj",
+"AlARM_SET.obj" 
+TO "calendar" 

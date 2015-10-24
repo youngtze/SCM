@@ -1,0 +1,268 @@
+C51 COMPILER V9.00   ALARM_SET                                                             01/10/2013 17:30:29 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ALARM_SET
+OBJECT MODULE PLACED IN AlARM_SET.OBJ
+COMPILER INVOKED BY: D:\Keil U4\C51\BIN\C51.EXE AlARM_SET.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg51.h>
+   2          #include<intrins.h>
+   3          #define uint unsigned int
+   4          #define uchar unsigned char
+   5          sbit keyfive=P3^0;
+   6          sbit keysix=P3^1;
+   7          sbit keyseven=P3^2;
+   8          sbit keyeight=P3^3;
+   9          bit keyfive_flag=0;
+  10          bit keysix_flag=0;
+  11          bit keyseven_flag=0;
+  12          bit keyeight_flag=0;
+  13          uchar a,b;
+  14          uchar alarm_panel[]="ALARM  PANEL TH: TL:";
+  15          
+  16          /********调用外部函数及变量声明部分*************/
+  17          void ds18b20_writebyte(uchar dat);
+  18          uchar ds18b20_readbyte();
+  19          void ds18b20_initial();
+  20          void ds18b20_convert();
+  21          uint ds18b20_deal();
+  22          void lcd_writecommand(uchar command);
+  23          void lcd_writedata(uchar dat);
+  24          void lcd_initial();
+  25          uchar decimal_character(uchar decimal);
+  26          /********调用外部函数及变量声明部分*************/
+  27          
+  28          /******************************
+  29          *  函数功能：软件延时（约1ms）
+  30          *  入口参数：uint xms
+  31          *  出口参数：
+  32          *******************************/
+  33          static void delayms(uint xms)
+  34          {
+  35   1              uint i,j;
+  36   1              for(i=xms;i>0;i--)
+  37   1                      for(j=110;j>0;j--);
+  38   1      }
+  39          /***************按键检测程序****************/
+  40          void keyfive_scan()
+  41          {
+  42   1              if(keyfive==0)
+  43   1              {
+  44   2                      delayms(10);
+  45   2                      if(keyfive==0)
+  46   2                      {       
+  47   3                              while(keyfive==0);
+  48   3                              keyfive_flag=1;
+  49   3                      }
+  50   2              }
+  51   1      }
+  52          void keysix_scan()
+  53          {
+  54   1              if(keysix==0)
+  55   1              {
+C51 COMPILER V9.00   ALARM_SET                                                             01/10/2013 17:30:29 PAGE 2   
+
+  56   2                      delayms(10);
+  57   2                      if(keysix==0)
+  58   2                      {       
+  59   3                              while(keysix==0);
+  60   3                              keysix_flag=1;
+  61   3                      }
+  62   2              }
+  63   1      }
+  64          void keyseven_scan()
+  65          {
+  66   1              if(keyseven==0)
+  67   1              {
+  68   2                      delayms(10);
+  69   2                      if(keyseven==0)
+  70   2                      {       
+  71   3                              while(keyseven==0);
+  72   3                              keyseven_flag=1;
+  73   3                      }
+  74   2              }
+  75   1      }
+  76          void keyeight_scan()
+  77          {
+  78   1              if(keyeight==0)
+  79   1              {
+  80   2                      delayms(10);
+  81   2                      if(keyeight==0)
+  82   2                      {       
+  83   3                              while(keyeight==0);
+  84   3                              keyeight_flag=1;
+  85   3                      }
+  86   2              }
+  87   1      }
+  88          /*******************************************************
+  89          *  函数功能：向scratchpad TH TL CONFIGURATION中写入数据
+  90          *  入口参数：
+  91          *  出口参数：
+  92          *******************************************************/
+  93          void ds18b20_writealarm(uchar th,uchar tl)
+  94          {
+  95   1              ds18b20_initial();
+  96   1              ds18b20_writebyte(0xcc); //Skip ROM command
+  97   1              ds18b20_writebyte(0x4e); //Write scratchpad
+  98   1              ds18b20_writebyte(th); //TH 25
+  99   1              ds18b20_writebyte(tl); //TL 0
+ 100   1              ds18b20_writebyte(0x7f); //configuration register
+ 101   1      }
+ 102          void ds1820_readalarm()
+ 103          {
+ 104   1              ds18b20_initial();
+ 105   1              ds18b20_writebyte(0xcc); //Sip ROM command
+ 106   1              ds18b20_writebyte(0xbe);//Read sratchpad command
+ 107   1              ds18b20_readbyte();
+ 108   1              ds18b20_readbyte();
+ 109   1              a=ds18b20_readbyte();
+ 110   1              b=ds18b20_readbyte();
+ 111   1      //      ds18b20_initial();
+ 112   1      }
+ 113          void set_limit(uchar cursor)
+ 114          {
+ 115   1              while(keysix_flag==0)
+ 116   1              {
+ 117   2                      keysix_scan();
+C51 COMPILER V9.00   ALARM_SET                                                             01/10/2013 17:30:29 PAGE 3   
+
+ 118   2                      keyseven_scan();
+ 119   2                      keyeight_scan();
+ 120   2                      if(keyseven_flag==1)
+ 121   2                      {       
+ 122   3                              keyseven_flag=0;
+ 123   3                              ds1820_readalarm();
+ 124   3                              switch(cursor)
+ 125   3                              {
+ 126   4                                      case 0: a+=1;
+ 127   4                                                      ds18b20_writealarm(a,b);
+ 128   4                                                      ds1820_readalarm();
+ 129   4                                                      lcd_writecommand(0x80+0x46+cursor-1);
+ 130   4                                                      lcd_writedata(decimal_character(a/10));
+ 131   4                                                      lcd_writedata(decimal_character(a%10));
+ 132   4                                                      break;
+ 133   4                                      case 7: b+=1;
+ 134   4                                                      ds18b20_writealarm(a,b);
+ 135   4                                                      ds1820_readalarm();
+ 136   4                                                      lcd_writecommand(0x80+0x46+cursor-1);
+ 137   4                                                      lcd_writedata(decimal_character(b/10));
+ 138   4                                                      lcd_writedata(decimal_character(b%10));
+ 139   4                                                      break;   
+ 140   4                                 default: break;
+ 141   4                              }
+ 142   3                      }
+ 143   2                      if(keyeight_flag==1)
+ 144   2                      {       
+ 145   3                              keyeight_flag=0;
+ 146   3                              ds1820_readalarm();
+ 147   3                              switch(cursor)
+ 148   3                              {
+ 149   4                                      case 0: a-=1;
+ 150   4                                                      ds18b20_writealarm(a,b);
+ 151   4                                                      ds1820_readalarm();
+ 152   4                                                      lcd_writecommand(0x80+0x46+cursor-1);
+ 153   4                                                      lcd_writedata(decimal_character(a/10));
+ 154   4                                                      lcd_writedata(decimal_character(a%10));
+ 155   4                                                      break;
+ 156   4                                      case 7: b-=1;
+ 157   4                                                      ds18b20_writealarm(a,b);
+ 158   4                                                      ds1820_readalarm();
+ 159   4                                                      lcd_writecommand(0x80+0x46+cursor-1);
+ 160   4                                                      lcd_writedata(decimal_character(b/10));
+ 161   4                                                      lcd_writedata(decimal_character(b%10));
+ 162   4                                                      break;   
+ 163   4                                 default: break;
+ 164   4                              }
+ 165   3                      }
+ 166   2              }
+ 167   1      }
+ 168          
+ 169          void shift_cursor()
+ 170          {
+ 171   1              uchar i,cursor=0;
+ 172   1              while(keysix_flag==1)
+ 173   1              {
+ 174   2                      keysix_flag=0;
+ 175   2                      for(i=0;i<5;i++)
+ 176   2                      {
+ 177   3                              lcd_writecommand(0x80+0x46+cursor);
+ 178   3                              lcd_writedata('_');
+ 179   3                              delayms(500);
+C51 COMPILER V9.00   ALARM_SET                                                             01/10/2013 17:30:29 PAGE 4   
+
+ 180   3                              lcd_writecommand(0x80+0x46+cursor);
+ 181   3                              lcd_writedata(' ');
+ 182   3                              delayms(500);
+ 183   3                              keysix_scan();
+ 184   3                              keyseven_scan();
+ 185   3                              keyeight_scan();
+ 186   3                              if(keysix_flag==1)
+ 187   3                                      break;
+ 188   3                              if(keyseven_flag==1||keyeight_flag==1)
+ 189   3                              {
+ 190   4                                      set_limit(cursor);
+ 191   4                                  break;
+ 192   4                              }
+ 193   3                      }
+ 194   2                      cursor+=7;
+ 195   2                      if(cursor==14)
+ 196   2                              cursor=0;
+ 197   2              }
+ 198   1      
+ 199   1      
+ 200   1      
+ 201   1      }
+ 202          void set_alarm()
+ 203          {
+ 204   1              uchar i;
+ 205   1              keyfive_flag=0;
+ 206   1              lcd_writecommand(0x01);
+ 207   1              ds1820_readalarm();
+ 208   1              while(keyfive_flag==0)
+ 209   1              {
+ 210   2                      lcd_writecommand(0x80+0x02);
+ 211   2                      for(i=0;i<12;i++)
+ 212   2                      {
+ 213   3                              lcd_writedata(alarm_panel[i]);
+ 214   3                      }
+ 215   2                      lcd_writecommand(0x80+0x42);
+ 216   2                      for(i=13;i<16;i++)
+ 217   2                      {
+ 218   3                              lcd_writedata(alarm_panel[i]);
+ 219   3                      }
+ 220   2                      lcd_writedata(decimal_character(a/10));
+ 221   2                      lcd_writedata(decimal_character(a%10));
+ 222   2                      lcd_writecommand(0x80+0x49);
+ 223   2                      for(i=17;i<20;i++)
+ 224   2                      {
+ 225   3                              lcd_writedata(alarm_panel[i]);
+ 226   3                      }
+ 227   2                      lcd_writedata(decimal_character(b/10));
+ 228   2                      lcd_writedata(decimal_character(b%10));
+ 229   2                      if(keysix_flag==1)
+ 230   2                              shift_cursor();
+ 231   2                      keyfive_scan();
+ 232   2                      keysix_scan();
+ 233   2              }
+ 234   1                      ds18b20_initial();
+ 235   1                      ds18b20_writebyte(0xcc);
+ 236   1                      ds18b20_writebyte(0x48);
+ 237   1      }       
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    641    ----
+C51 COMPILER V9.00   ALARM_SET                                                             01/10/2013 17:30:29 PAGE 5   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     23       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

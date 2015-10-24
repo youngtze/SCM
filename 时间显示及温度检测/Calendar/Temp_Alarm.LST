@@ -1,0 +1,88 @@
+C51 COMPILER V9.00   TEMP_ALARM                                                            10/12/2012 15:50:17 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE TEMP_ALARM
+OBJECT MODULE PLACED IN Temp_Alarm.OBJ
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE Temp_Alarm.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg51.h>
+   2          #define uint unsigned int 
+   3          #define uchar unsigned char
+   4          uchar rom_alarm_code[8],rom_read_code[8];
+   5          sbit beep=P1^5;
+   6          /*********调用外部函数及变量声明部分**********/
+   7          void ds18b20_writebyte(uchar dat);
+   8          uchar ds18b20_readbyte();
+   9          void ds18b20_initial();
+  10          
+  11          /*********调用外部函数及变量声明部分**********/
+  12          static void delayms(uint xms)
+  13          {
+  14   1              uint i,j;
+  15   1              for(i=xms;i>0;i--)
+  16   1                      for(j=110;j>0;j--);
+  17   1      }
+  18          void ds18b20_set_alarm()
+  19          {
+  20   1              ds18b20_initial();                 //ds18b20初始化
+  21   1              ds18b20_writebyte(0xcc);  //Skip ROM command
+  22   1              ds18b20_writebyte(0x4e);  //Write Scratchpad command
+  23   1              ds18b20_writebyte(0x14); //TH设置为20
+  24   1              ds18b20_writebyte(0x00); //TL设置为0
+  25   1              ds18b20_writebyte(0x7f); //config设置为12bit分辨率
+  26   1      }
+  27          void ds18b20_read_rom()
+  28          {
+  29   1              uchar i;
+  30   1              ds18b20_initial();
+  31   1              ds18b20_writebyte(0x33);//Read ROM command
+  32   1              for(i=0;i<8;i++)
+  33   1              {
+  34   2                      rom_read_code[i]=ds18b20_readbyte();
+  35   2              }
+  36   1      }
+  37          void ds18b20_search_alarm()
+  38          {
+  39   1              uchar j,flag;
+  40   1              ds18b20_initial();                  //ds18b20初始化
+  41   1              ds18b20_writebyte(0xec);  //Alarm search指令
+  42   1              for(j=0;j<8;j++)
+  43   1              {
+  44   2                      rom_alarm_code[j]=ds18b20_readbyte();
+  45   2              }       
+  46   1              for(j=0,flag=0;j<8;j++)
+  47   1              {
+  48   2                      if(rom_alarm_code[j]!=rom_read_code[j])
+  49   2                              flag++; 
+  50   2              }
+  51   1              if(flag==0)
+  52   1              {
+  53   2                      while(1)
+  54   2                      {
+  55   3                              beep=~beep;
+C51 COMPILER V9.00   TEMP_ALARM                                                            10/12/2012 15:50:17 PAGE 2   
+
+  56   3                              delayms(500);   
+  57   3                      }
+  58   2              }
+  59   1      }
+  60          
+  61          
+  62          
+  63          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    162    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

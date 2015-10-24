@@ -1,0 +1,391 @@
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE CALENDAR_SET
+OBJECT MODULE PLACED IN CALENDAR_SET.OBJ
+COMPILER INVOKED BY: D:\Keil U4\C51\BIN\C51.EXE CALENDAR_SET.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg51.h>
+   2          #define uint unsigned int
+   3          #define uchar unsigned char
+   4          sbit keyone=P1^0;
+   5          sbit keytwo=P1^1;
+   6          sbit keythree=P1^2;
+   7          bit keyone_flag=0,keytwo_flag=0,keythree_flag=0;
+   8          /********µ÷ÓÃÍâ²¿º¯Êý¼°±äÁ¿ÉùÃ÷²¿·Ö*************/
+   9          void lcd_writecommand(uchar command);
+  10          void lcd_writedata(uchar dat);
+  11          uchar ds1302_read(uchar address);
+  12          void ds1302_write(uchar address,uchar dat);
+  13          uchar bcd_decimal(uchar bcd);
+  14          uchar decimal_bcd(uchar decimal);
+  15          uchar decimal_character(uchar decimal);
+  16          extern uchar code ds1302_write_ckaddress[];
+  17          extern uchar code ds1302_read_ckaddress[];
+  18          extern uchar ds1302_display[];
+  19          extern uchar ds1302_day[][3];
+  20          /********µ÷ÓÃÍâ²¿º¯Êý¼°±äÁ¿ÉùÃ÷²¿·Ö*************/
+  21          
+  22          static void delayms(uint xms)
+  23          {
+  24   1              uint i,j;
+  25   1              for(i=xms;i>0;i--)
+  26   1                      for(j=110;j>0;j--);
+  27   1      }
+  28          /***************°´¼ü¼ì²â³ÌÐò****************/
+  29          void keyone_scan()
+  30          {
+  31   1              if(keyone==0)
+  32   1              {
+  33   2                      delayms(10);
+  34   2                      if(keyone==0)
+  35   2                      {       
+  36   3                              while(keyone==0);
+  37   3                              keyone_flag=1;
+  38   3                      }
+  39   2              }
+  40   1      }
+  41          void keytwo_scan()
+  42          {
+  43   1              if(keytwo==0)
+  44   1              {
+  45   2                      delayms(10);
+  46   2                      if(keytwo==0)
+  47   2                      {       
+  48   3                              while(keytwo==0);
+  49   3                              keytwo_flag=1;
+  50   3                      }
+  51   2              }
+  52   1      }
+  53          void keythree_scan()
+  54          {
+  55   1              if(keythree==0)
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 2   
+
+  56   1              {
+  57   2                      delayms(10);
+  58   2                      if(keythree==0)
+  59   2                      {       
+  60   3                              while(keythree==0);
+  61   3                              keythree_flag=1;
+  62   3                      }
+  63   2              }
+  64   1      }
+  65          /***************°´¼ü¼ì²â³ÌÐò****************/
+  66          void set_calendar(uchar count,uchar cursor)
+  67          {
+  68   1              while(keyone_flag==0)
+  69   1              {
+  70   2                      keyone_scan();
+  71   2                      keytwo_scan();
+  72   2                      keythree_scan();
+  73   2      /************************ÈÕÀúµ÷Õû¼Ó1²Ù×÷****************************/
+  74   2                      if(keytwo_flag==1)
+  75   2                      {
+  76   3                              keytwo_flag=0;
+  77   3                              switch(count)
+  78   3                              {
+  79   4                                      case 0:if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))+1>99)        //´Óyear¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼Ó1²Ù
+             -×÷
+  80   4                                                              ds1302_write(ds1302_write_ckaddress[6],0);
+  81   4                                                      else
+  82   4                                                              ds1302_write(ds1302_write_ckaddress[6],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]
+             -))+1));
+  83   4                                                      ds1302_display[3]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))%10);       
+  84   4                                                      ds1302_display[2]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))/10);
+  85   4                                                      lcd_writecommand(0x80+cursor-1);
+  86   4                                                      lcd_writedata(ds1302_display[2]);
+  87   4                                                      lcd_writedata(ds1302_display[3]);
+  88   4                                                      break;
+  89   4                                      case 1: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))+1>12)       //´Ómonth¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼Ó1
+             -²Ù×÷
+  90   4                                                              ds1302_write(ds1302_write_ckaddress[4],1);
+  91   4                                                      else
+  92   4                                                              ds1302_write(ds1302_write_ckaddress[4],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]
+             -))+1));
+  93   4                                                      ds1302_display[6]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))%10);      
+  94   4                                                      ds1302_display[5]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))/10);
+  95   4                                                      lcd_writecommand(0x80+cursor-1);
+  96   4                                                      lcd_writedata(ds1302_display[5]);
+  97   4                                                      lcd_writedata(ds1302_display[6]);
+  98   4                                                      break;  
+  99   4                                      case 2: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))+1>31)       //´Ódate¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼Ó1²
+             -Ù×÷
+ 100   4                                                              ds1302_write(ds1302_write_ckaddress[3],1);
+ 101   4                                                      else
+ 102   4                                                              ds1302_write(ds1302_write_ckaddress[3],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]
+             -))+1));
+ 103   4                                                      ds1302_display[9]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))%10);       
+ 104   4                                                      ds1302_display[8]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))/10); 
+ 105   4                                              lcd_writecommand(0x80+cursor-1);
+ 106   4                                                      lcd_writedata(ds1302_display[8]);
+ 107   4                                                      lcd_writedata(ds1302_display[9]);
+ 108   4                                                      break;
+ 109   4                                      case 3: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))+1>7)        //´Óday¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼Ó1²Ù×
+             -÷
+ 110   4                                                              ds1302_write(ds1302_write_ckaddress[5],1);
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 3   
+
+ 111   4                                                      else
+ 112   4                                                              ds1302_write(ds1302_write_ckaddress[5],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]
+             -))+1));
+ 113   4                                                      lcd_writecommand(0x80+cursor-2);
+ 114   4                                                      lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][0]);  
+ 115   4                                                      lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][1]);
+ 116   4                                                      lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][2]);
+ 117   4                                                      break;
+ 118   4                                      case 4: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))+1>23)       //´Óhour¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼Ó1²
+             -Ù×÷
+ 119   4                                                              ds1302_write(ds1302_write_ckaddress[2],0);
+ 120   4                                                      else
+ 121   4                                                              ds1302_write(ds1302_write_ckaddress[2],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]
+             -))+1));
+ 122   4                                                      ds1302_display[11]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))%10);  
+ 123   4                                                      ds1302_display[10]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))/10);
+ 124   4                                                      lcd_writecommand(0x80+cursor-1);
+ 125   4                                                      lcd_writedata(ds1302_display[10]);
+ 126   4                                                      lcd_writedata(ds1302_display[11]);
+ 127   4                                                      break;
+ 128   4                                      case 5: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))+1>59)      //´Óminute¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼Ó1
+             -²Ù×÷
+ 129   4                                                              ds1302_write(ds1302_write_ckaddress[1],0);
+ 130   4                                                      else
+ 131   4                                                              ds1302_write(ds1302_write_ckaddress[1],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]
+             -))+1));
+ 132   4                                                      ds1302_display[14]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))%10);  
+ 133   4                                                      ds1302_display[13]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))/10);
+ 134   4                                                      lcd_writecommand(0x80+cursor-1);
+ 135   4                                                      lcd_writedata(ds1302_display[13]);
+ 136   4                                                      lcd_writedata(ds1302_display[14]);
+ 137   4                                                      break;
+ 138   4                                      case 6: ds1302_write(ds1302_write_ckaddress[0],0);
+ 139   4                                                      ds1302_display[17]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[0]))%10);  //½«se
+             -cond¼Ä´æÆ÷ÖÃ0
+ 140   4                                                      ds1302_display[16]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[0]))/10);
+ 141   4                                                      lcd_writecommand(0x80+cursor-1);
+ 142   4                                                      lcd_writedata(ds1302_display[16]);
+ 143   4                                                      lcd_writedata(ds1302_display[17]);
+ 144   4                                                      break;  
+ 145   4                                      default: break;
+ 146   4                              }       
+ 147   3                      }
+ 148   2      /************************ÈÕÀúµ÷Õû¼Ó1²Ù×÷****************************/
+ 149   2              
+ 150   2      /************************ÈÕÀúµ÷Õû¼õ1²Ù×÷****************************/
+ 151   2                      if(keythree_flag==1)
+ 152   2                      {
+ 153   3                              keythree_flag=0;
+ 154   3                              switch(count)
+ 155   3                              {
+ 156   4                                      case 0:if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))==0)          //´Óyear¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼õ1²Ù×÷
+ 157   4                                                              ds1302_write(ds1302_write_ckaddress[6],decimal_bcd(99));
+ 158   4                                                      else
+ 159   4                                                              ds1302_write(ds1302_write_ckaddress[6],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]
+             -))-1));
+ 160   4                                                      ds1302_display[3]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))%10);       
+ 161   4                                                      ds1302_display[2]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))/10);
+ 162   4                                                      lcd_writecommand(0x80+cursor-1);
+ 163   4                                                      lcd_writedata(ds1302_display[2]);
+ 164   4                                                      lcd_writedata(ds1302_display[3]);
+ 165   4                                                      break;
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 4   
+
+ 166   4                                      case 1: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))-1<1)        //´Ómonth¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼õ1²
+             -Ù×÷
+ 167   4                                                              ds1302_write(ds1302_write_ckaddress[4],decimal_bcd(23));
+ 168   4                                                      else
+ 169   4                                                              ds1302_write(ds1302_write_ckaddress[4],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]
+             -))-1));
+ 170   4                                                      ds1302_display[6]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))%10);      
+ 171   4                                                      ds1302_display[5]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))/10);
+ 172   4                                                      lcd_writecommand(0x80+cursor-1);
+ 173   4                                                      lcd_writedata(ds1302_display[5]);
+ 174   4                                                      lcd_writedata(ds1302_display[6]);
+ 175   4                                                      break;  
+ 176   4                                      case 2: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))-1<1)        //´Ódate¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼õ1²Ù
+             -×÷
+ 177   4                                                              ds1302_write(ds1302_write_ckaddress[3],decimal_bcd(31));
+ 178   4                                                      else
+ 179   4                                                              ds1302_write(ds1302_write_ckaddress[3],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]
+             -))-1));
+ 180   4                                                      ds1302_display[9]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))%10);       
+ 181   4                                                      ds1302_display[8]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))/10); 
+ 182   4                                              lcd_writecommand(0x80+cursor-1);
+ 183   4                                                      lcd_writedata(ds1302_display[8]);
+ 184   4                                                      lcd_writedata(ds1302_display[9]);
+ 185   4                                                      break;
+ 186   4                                      case 3: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1<1)        //´Óday¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼õ1²Ù×
+             -÷
+ 187   4                                                              ds1302_write(ds1302_write_ckaddress[5],decimal_bcd(7));
+ 188   4                                                      else
+ 189   4                                                              ds1302_write(ds1302_write_ckaddress[5],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]
+             -))-1));
+ 190   4                                                      lcd_writecommand(0x80+cursor-2);
+ 191   4                                                      lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][0]);  
+ 192   4                                                      lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][1]);
+ 193   4                                                      lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][2]);
+ 194   4                                                      break;
+ 195   4                                      case 4: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))==0)         //´Óhour¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼õ1²Ù×
+             -÷
+ 196   4                                                              ds1302_write(ds1302_write_ckaddress[2],decimal_bcd(23));
+ 197   4                                                      else
+ 198   4                                                              ds1302_write(ds1302_write_ckaddress[2],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]
+             -))-1));
+ 199   4                                                      ds1302_display[11]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))%10);  
+ 200   4                                                      ds1302_display[10]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))/10);
+ 201   4                                                      lcd_writecommand(0x80+cursor-1);
+ 202   4                                                      lcd_writedata(ds1302_display[10]);
+ 203   4                                                      lcd_writedata(ds1302_display[11]);
+ 204   4                                                      break;
+ 205   4                                      case 5: if(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))==0)        //´Óminute¼Ä´æÆ÷¶Á³öÊý¾ÝºóÖ´ÐÐ¼õ1²Ù
+             -×÷
+ 206   4                                                              ds1302_write(ds1302_write_ckaddress[1],decimal_bcd(59));
+ 207   4                                                      else
+ 208   4                                                              ds1302_write(ds1302_write_ckaddress[1],decimal_bcd(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]
+             -))-1));
+ 209   4                                                      ds1302_display[14]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))%10);  
+ 210   4                                                      ds1302_display[13]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))/10);
+ 211   4                                                      lcd_writecommand(0x80+cursor-1);
+ 212   4                                                      lcd_writedata(ds1302_display[13]);
+ 213   4                                                      lcd_writedata(ds1302_display[14]);
+ 214   4                                                      break;
+ 215   4                                      case 6: ds1302_write(ds1302_write_ckaddress[0],0);
+ 216   4                                                      ds1302_display[17]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[0]))%10);  //½«se
+             -cond¼Ä´æÆ÷ÖÃ0
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 5   
+
+ 217   4                                                      ds1302_display[16]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[0]))/10);
+ 218   4                                                      lcd_writecommand(0x80+cursor-1);
+ 219   4                                                      lcd_writedata(ds1302_display[16]);
+ 220   4                                                      lcd_writedata(ds1302_display[17]);
+ 221   4                                                      break;  
+ 222   4                                 default: break;
+ 223   4                              }       
+ 224   3                      }
+ 225   2      /************************ÈÕÀúµ÷Õû¼õ1²Ù×÷****************************/
+ 226   2      
+ 227   2              }                          
+ 228   1      } 
+ 229          void set_cursor()
+ 230          {
+ 231   1              uchar i,count=0,cursor=0;
+ 232   1              while(keyone_flag==1)
+ 233   1              {               
+ 234   2                  keyone_flag=0;
+ 235   2                      cursor+=3;      
+ 236   2      /*              lcd_writecommand(0x38);
+ 237   2                      lcd_writecommand(0x0c);
+ 238   2                      lcd_writecommand(0x06);           ¿ÉÒÔÈ¥µô   */
+ 239   2                      for(i=0;i<5;i++)
+ 240   2                      {
+ 241   3                              lcd_writecommand(0x80+cursor);
+ 242   3                              lcd_writedata('_');
+ 243   3                              delayms(500);
+ 244   3                              lcd_writecommand(0x80+cursor);
+ 245   3                              lcd_writedata(' ');
+ 246   3                              delayms(500);
+ 247   3                              keyone_scan();
+ 248   3                              keytwo_scan();
+ 249   3                              keythree_scan();
+ 250   3                              if(keyone_flag==1)
+ 251   3                                      break;  
+ 252   3                              if(keytwo_flag==1||keythree_flag==1)
+ 253   3                              {
+ 254   4                                      set_calendar(count,cursor);
+ 255   4                                      break;
+ 256   4                              }
+ 257   3      //                      if(keythree_flag==1)
+ 258   3      //                      {
+ 259   3      //                              set_calendar(count,cursor);
+ 260   3      //                              break;
+ 261   3      //                      }
+ 262   3                      }
+ 263   2                      switch(count)
+ 264   2                      {
+ 265   3                              case 0: ds1302_display[3]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))%10);       /
+             -/¹â±êÏûÊ§ºóÐ´ÈëÄêÐÅÏ¢
+ 266   3                                              ds1302_display[2]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[6]))/10);
+ 267   3                                              lcd_writecommand(0x80+cursor-1);
+ 268   3                                              lcd_writedata(ds1302_display[2]);
+ 269   3                                              lcd_writedata(ds1302_display[3]);
+ 270   3                                              break;
+ 271   3                              case 1: ds1302_display[6]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))%10);      //
+             -¹â±êÏûÊ§ºóÐ´ÈëÔÂÐÅÏ¢
+ 272   3                                              ds1302_display[5]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[4]))/10);
+ 273   3                                              lcd_writecommand(0x80+cursor-1);
+ 274   3                                              lcd_writedata(ds1302_display[5]);
+ 275   3                                              lcd_writedata(ds1302_display[6]);
+ 276   3                                              break;
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 6   
+
+ 277   3                              case 2: ds1302_display[9]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))%10);       /
+             -/¹â±êÏûÊ§ºóÐ´ÈëÈÕÐÅÏ¢
+ 278   3                                              ds1302_display[8]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[3]))/10); 
+ 279   3                                      lcd_writecommand(0x80+cursor-1);
+ 280   3                                              lcd_writedata(ds1302_display[8]);
+ 281   3                                              lcd_writedata(ds1302_display[9]);
+ 282   3                                              break;
+ 283   3                              case 3: lcd_writecommand(0x80+cursor-2);
+ 284   3                                              lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][0]);  //¹â±êÏûÊ§ºóÐ´Èë
+             -dayÐÅÏ¢
+ 285   3                                              lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][1]);
+ 286   3                                              lcd_writedata(ds1302_day[bcd_decimal(ds1302_read(ds1302_read_ckaddress[5]))-1][2]);
+ 287   3                                              break;
+ 288   3                              case 4: ds1302_display[11]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))%10);  /
+             -/¹â±êÏûÊ§ºóÐ´ÈëÊ±ÐÅÏ¢
+ 289   3                                              ds1302_display[10]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[2]))/10);
+ 290   3                                              lcd_writecommand(0x80+cursor-1);
+ 291   3                                              lcd_writedata(ds1302_display[10]);
+ 292   3                                              lcd_writedata(ds1302_display[11]);
+ 293   3                                              break;
+ 294   3                              case 5: ds1302_display[14]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))%10);  /
+             -/¹â±êÏûÊ§ºóÐ´Èë·ÖÐÅÏ¢
+ 295   3                                              ds1302_display[13]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[1]))/10);
+ 296   3                                              lcd_writecommand(0x80+cursor-1);
+ 297   3                                              lcd_writedata(ds1302_display[13]);
+ 298   3                                              lcd_writedata(ds1302_display[14]);
+ 299   3                                              break;
+ 300   3                              case 6: ds1302_display[17]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[0]))%10);  /
+             -/¹â±êÏûÊ§ºóÐ´ÈëÃëÐÅÏ¢
+ 301   3                                              ds1302_display[16]=decimal_character(bcd_decimal(ds1302_read(ds1302_read_ckaddress[0]))/10);
+ 302   3                                              lcd_writecommand(0x80+cursor-1);
+ 303   3                                              lcd_writedata(ds1302_display[16]);
+ 304   3                                              lcd_writedata(ds1302_display[17]);
+ 305   3                                              break;
+ 306   3                        default:      break;
+ 307   3                      }
+ 308   2                      count++;
+ 309   2                      if(count==7)
+ 310   2                              count=0;
+ 311   2                      switch(cursor)
+ 312   2                      {
+ 313   3                              case 0x09:cursor=11;
+ 314   3                                                      break;
+ 315   3                              case 0x0e:cursor=0x3e;
+ 316   3                                                      break;
+ 317   3                              case 0x47:cursor=0;
+ 318   3                                                      break;
+ 319   3                                default:      break;
+ 320   3                      }        
+ 321   2              }
+ 322   1      }
+ 323          
+ 324          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2521    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       5
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.00   CALENDAR_SET                                                          01/10/2013 17:30:29 PAGE 7   
+
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,149 @@
+C51 COMPILER V9.00   DS18B20                                                               01/10/2013 17:30:28 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE DS18B20
+OBJECT MODULE PLACED IN DS18B20.OBJ
+COMPILER INVOKED BY: D:\Keil U4\C51\BIN\C51.EXE DS18B20.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg51.h>
+   2          #include<intrins.h>
+   3          #define uint unsigned int
+   4          #define uchar unsigned char
+   5          /************************
+   6          *  DS18B20功能引脚位定义
+   7          *************************/
+   8          sbit ds18b20=P3^7;       //ds18b20单总线
+   9          /******************************
+  10          *  函数功能：软件延时（约1ms）
+  11          *  入口参数：uint xms
+  12          *  出口参数：
+  13          *******************************/
+  14          static void delayms(uint xms)
+  15          {
+  16   1              uint i,j;
+  17   1              for(i=xms;i>0;i--)
+  18   1                      for(j=110;j>0;j--);
+  19   1      }
+  20          /***************************************
+  21          *  函数功能：向ds18b20写入一个字节数据
+  22          *  入口参数：uchar dat
+  23          *  出口参数：
+  24          ****************************************/
+  25          void ds18b20_writebyte(uchar dat)
+  26          {
+  27   1              uchar i,j;
+  28   1              for(i=0;i<8;i++)
+  29   1              {
+  30   2      //              ds18b20=1;
+  31   2      //              NOP;
+  32   2                      ds18b20=0;
+  33   2                      _nop_();
+  34   2                      _nop_();
+  35   2                      ds18b20=0x01&dat;
+  36   2                      for(j=10;j>0;j--);
+  37   2                      ds18b20=1;                 //拉高总线回到 idle state
+  38   2                      dat>>=1;
+  39   2              }
+  40   1      }
+  41          /**************************************
+  42          *  函数功能：从ds18b20读出一个字节数据
+  43          *  入口参数：
+  44          *  出口参数：uchar dat
+  45          ***************************************/
+  46          uchar ds18b20_readbyte()
+  47          {
+  48   1              uchar i,j,dat=0;
+  49   1              for(i=0;i<8;i++)
+  50   1              {
+  51   2      //              ds18b20=1;
+  52   2      //              NOP;
+  53   2                      ds18b20=0;
+  54   2                      _nop_();
+  55   2                      dat>>=1;
+C51 COMPILER V9.00   DS18B20                                                               01/10/2013 17:30:28 PAGE 2   
+
+  56   2                      ds18b20=1;
+  57   2                      if(ds18b20)
+  58   2                              dat|=0x80;
+  59   2                      for(j=8;j>0;j--);
+  60   2                      ds18b20=1;               //拉高总线回到 idle state
+  61   2      //              NOP;
+  62   2              }
+  63   1              return dat;
+  64   1      }
+  65          /*********************************
+  66          *  函数功能：对ds18b20进行初始化
+  67          *  入口参数：
+  68          *  出口参数：
+  69          **********************************/
+  70          void ds18b20_initial()
+  71          {
+  72   1              uint i,j,k=10;
+  73   1              ds18b20=1;
+  74   1              _nop_();
+  75   1              ds18b20=0;
+  76   1              for(i=80;i>0;i--); //主机拉低总线至少480us
+  77   1              ds18b20=1;                 //主机释放总线
+  78   1              for(j=10;j>0;j--);
+  79   1              while(ds18b20&&k--);
+  80   1              for(i=70;i>0;i--);
+  81   1              ds18b20=1;
+  82   1      }
+  83          /******************************************************
+  84          *  函数功能：从ds18b20读取转换后的温度，并进行相关处理
+  85          *  入口参数：
+  86          *  出口参数：
+  87          *******************************************************/
+  88          uint ds18b20_deal()
+  89          {
+  90   1              uint a,b,c;
+  91   1              float temp;
+  92   1              ds18b20_initial();
+  93   1              delayms(1);
+  94   1              ds18b20_writebyte(0xcc);  //写跳过ROM指令
+  95   1      //      delayms(1);
+  96   1              ds18b20_writebyte(0xbe);  //写读取温度指令
+  97   1      //      delayms(1);
+  98   1              a=ds18b20_readbyte();    //读取低8位温度
+  99   1      //      delayms(1);
+ 100   1              b=ds18b20_readbyte();   //读取高8位温度
+ 101   1              b<<=8;
+ 102   1              b|=a;
+ 103   1              temp=b*0.0625; //温度转换，分辨率为12位（0.0625）
+ 104   1              c=temp*10+0.5; //保留一位小数，并进行四舍五入处理
+ 105   1              return c;
+ 106   1      }
+ 107          /**************************************
+ 108          *  函数功能：对ds18b20开启温度转换
+ 109          *  入口参数：
+ 110          *  出口参数：
+ 111          ***************************************/
+ 112          void ds18b20_convert()
+ 113          {
+ 114   1                      ds18b20_initial();                      //初始化
+ 115   1      //              delayms(1);
+ 116   1                      ds18b20_writebyte(0xcc);        //跳过ROM命令
+ 117   1      //              delayms(1);
+C51 COMPILER V9.00   DS18B20                                                               01/10/2013 17:30:28 PAGE 3   
+
+ 118   1                      ds18b20_writebyte(0x44);   //开启温度转换
+ 119   1                      delayms(700);     //等待温度转换完成
+ 120   1      }
+ 121          
+ 122          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    261    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
